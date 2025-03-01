@@ -10,14 +10,13 @@ sudo apt-get update
 sudo apt-get upgrade -y
 
 # Step 2: Install prerequisites
-sudo apt-get install -y apache2 cmake libjpeg62-turbo-dev git curl
+sudo apt-get install -y pigpio apache2 cmake libjpeg62-turbo-dev git curl
 
 # Step 3: Install Node.js 14.17.0 via unofficial builds
 echo "Installing Node.js 14.17.0 (ARMv6 compatible)..."
 cd ~
 wget https://unofficial-builds.nodejs.org/download/release/v14.17.0/node-v14.17.0-linux-armv6l.tar.xz
 tar -xJf node-v14.17.0-linux-armv6l.tar.xz
-sudo rm node-v14.17.0-linux-armv6l.tar.xz
 sudo rm node-v14.17.0-linux-armv6l.tar.xz
 sudo mv node-v14.17.0-linux-armv6l /usr/local/node
 sudo ln -sf /usr/local/node/bin/node /usr/local/bin/node
@@ -36,10 +35,10 @@ npm ci
 # Step 6: Install mjpg-streamer
 echo "Installing mjpg-streamer..."
 cd ~
-git clone https://github.com/jacksonliam/mjpg-streamer.git mjpg-streamer
+git clone https://github.com/jacksonliam/mjpg-streamer.git ~/mjpg-streamer
 cd mjpg-streamer/mjpg-streamer-experimental
 make clean all
-sudo mkdir -p /opt/mjpg-streamer
+sudo mkdir /opt/mjpg-streamer
 sudo mv * /opt/mjpg-streamer
 
 # Step 7: Enable I2C and Camera (for ADS1115 and raspistill)
@@ -47,21 +46,11 @@ echo "Enabling I2C and Camera interfaces..."
 sudo raspi-config nonint do_i2c 0  # Enable I2C
 sudo raspi-config nonint do_camera 0  # Enable Camera
 
-# Step 8: Create start_stream.sh if not in repo
-if [ ! -f start_stream.sh ]; then
-  echo "Creating start_stream.sh..."
-  cat << 'EOF' > start_stream.sh
-#!/bin/bash
-/opt/mjpg-streamer/mjpg_streamer -i "input_raspicam.so -fps 15 -q 80" -o "output_http.so -p 8080 -w /opt/mjpg-streamer/www" &
-EOF
-  chmod +x start_stream.sh
-fi
-
-# Step 9: Update rc.local for autostart
+# Step 8: Update rc.local for autostart
 echo "Configuring rc.local for autostart..."
 RC_LOCAL="/etc/rc.local"
-START_STREAM="bash /home/pi/ZeroBot/start_stream.sh &"
-NODE_APP="/usr/local/node/bin/node /home/pi/ZeroBot/app.js &"
+START_STREAM="/bin/bash /home/pi/ZeroBot/start_stream.sh &"
+NODE_APP="sudo /usr/local/node/bin/node /home/pi/ZeroBot/app.js &"
 # Backup rc.local
 sudo cp $RC_LOCAL $RC_LOCAL.bak
 # Remove existing exit 0, add commands, then re-add exit 0
