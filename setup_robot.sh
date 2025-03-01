@@ -12,10 +12,16 @@ sudo apt-get upgrade -y
 # Step 2: Install prerequisites
 sudo apt-get install -y apache2 cmake libjpeg62-turbo-dev git curl
 
-# Step 3: Install Node.js 14.17.0 via NodeSource
+# Step 3: Install Node.js 14.17.0 via unofficial builds
 echo "Installing Node.js 14.17.0 (ARMv6 compatible)..."
-curl -fsSL https://deb.nodesource.com/setup_14.x | sudo -E bash -
-sudo apt-get install -y nodejs
+cd ~
+wget https://unofficial-builds.nodejs.org/download/release/v14.17.0/node-v14.17.0-linux-armv6l.tar.xz
+tar -xJf node-v14.17.0-linux-armv6l.tar.xz
+sudo rm node-v14.17.0-linux-armv6l.tar.xz
+sudo rm node-v14.17.0-linux-armv6l.tar.xz
+sudo mv node-v14.17.0-linux-armv6l /usr/local/node
+sudo ln -sf /usr/local/node/bin/node /usr/local/bin/node
+sudo ln -sf /usr/local/node/bin/npm /usr/local/bin/npm
 
 # Step 4: Clone your GitHub fork
 echo "Cloning ZeroBot repository..."
@@ -25,7 +31,6 @@ cd ZeroBot
 
 # Step 5: Install Node.js dependencies using package-lock.json
 echo "Installing npm dependencies and generating package-lock.json..."
-npm install --save-exact express socket.io node-ads1x15@1.0.1 pigpio
 npm ci
 
 # Step 6: Install mjpg-streamer
@@ -56,7 +61,7 @@ fi
 echo "Configuring rc.local for autostart..."
 RC_LOCAL="/etc/rc.local"
 START_STREAM="bash /home/pi/ZeroBot/start_stream.sh &"
-NODE_APP="/usr/bin/node /home/pi/ZeroBot/app.js &"
+NODE_APP="/usr/local/node/bin/node /home/pi/ZeroBot/app.js &"
 # Backup rc.local
 sudo cp $RC_LOCAL $RC_LOCAL.bak
 # Remove existing exit 0, add commands, then re-add exit 0
