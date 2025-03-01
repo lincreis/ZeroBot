@@ -10,18 +10,12 @@ sudo apt-get update
 sudo apt-get upgrade -y
 
 # Step 2: Install prerequisites
-sudo apt-get install -y apache2 cmake libjpeg62-turbo-dev git
+sudo apt-get install -y apache2 cmake libjpeg62-turbo-dev git curl
 
-# Step 3: Install Node.js and npm via nvm
-echo "Installing Node Version Manager (nvm)..."
-curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.39.7/install.sh | bash
-source ~/.bashrc
-echo "Installing Node.js 20 (LTS)..."
-nvm install 20
-nvm use 20
-nvm alias default 20
-node -v  # Should show v20.x.x
-npm -v   # Should show 10.x.x
+# Step 3: Install Node.js 14.17.0 via NodeSource
+echo "Installing Node.js 14.17.0 (ARMv6 compatible)..."
+curl -fsSL https://deb.nodesource.com/setup_14.x | sudo -E bash -
+sudo apt-get install -y nodejs
 
 # Step 4: Clone your GitHub fork
 echo "Cloning ZeroBot repository..."
@@ -30,7 +24,8 @@ git clone https://github.com/lincreis/ZeroBot.git
 cd ZeroBot
 
 # Step 5: Install Node.js dependencies using package-lock.json
-echo "Installing npm dependencies from package-lock.json..."
+echo "Installing npm dependencies and generating package-lock.json..."
+npm install --save-exact express socket.io node-ads1x15@1.0.1 pigpio
 npm ci
 
 # Step 6: Install mjpg-streamer
@@ -61,7 +56,7 @@ fi
 echo "Configuring rc.local for autostart..."
 RC_LOCAL="/etc/rc.local"
 START_STREAM="bash /home/pi/ZeroBot/start_stream.sh &"
-NODE_APP="node /home/pi/ZeroBot/app.js &"
+NODE_APP="/usr/bin/node /home/pi/ZeroBot/app.js &"
 # Backup rc.local
 sudo cp $RC_LOCAL $RC_LOCAL.bak
 # Remove existing exit 0, add commands, then re-add exit 0
@@ -71,9 +66,9 @@ echo "$NODE_APP" | sudo tee -a $RC_LOCAL > /dev/null
 echo "exit 0" | sudo tee -a $RC_LOCAL > /dev/null
 
 # --- Optional: Expand Filesystem (if needed) ---
-sudo raspi-config --expand-rootfs --nonint
+sudo raspi-config nonint do_expand_rootfs
 # --- Optional: Autologin to console on user pi
-sudo raspi-config --boot_autologin console pi --nonint
+sudo raspi-config nonint do_boot_behaviour B2
 
 # Step 10: Reboot to apply changes
 echo "Setup complete! Rebooting in 5 seconds..."
